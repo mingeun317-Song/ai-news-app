@@ -135,6 +135,7 @@
 | `source` | 출처 |
 | `url` | 정규화한 원문 URL(고유) |
 | `original_title` | 원문 제목 |
+| `author` | 원문 기사 작성자. 없으면 비워 둔다 |
 | `title_ko` | 한국어 제목 |
 | `summary_ko` | 한국어 요약 |
 | `category_id` | 카테고리. 없으면 미분류이며, 카테고리 삭제 시 `SET NULL` |
