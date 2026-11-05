@@ -1,3 +1,4 @@
+import { ClerkProvider, UserButton } from "@clerk/nextjs";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
@@ -20,10 +21,17 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
-      lang="en"
+      lang="ko"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <ClerkProvider signInUrl="/sign-in">
+          <div className="fixed right-4 top-4 z-10">
+            <UserButton />
+          </div>
+          {children}
+        </ClerkProvider>
+      </body>
     </html>
   );
 }
