@@ -106,11 +106,12 @@ body {
 |---|---|
 | 앱 이름(헤더) | `text-lg font-bold tracking-tight` |
 | 화면 제목 | `text-2xl font-bold tracking-tight` |
-| 카드 제목 | `text-base font-semibold leading-snug break-keep` (최대 2줄: `line-clamp-2`) |
-| 카드 요약 | `text-sm leading-relaxed text-foreground/80 break-keep` (최대 4줄: `line-clamp-4`) |
-| 출처·날짜·보조 문구 | `text-xs text-muted` |
+| 카드 제목 | `text-base font-semibold leading-snug break-keep wrap-break-word` (최대 2줄: `line-clamp-2`) |
+| 카드 요약 | `text-sm leading-relaxed text-foreground/80 break-keep wrap-break-word` (최대 4줄: `line-clamp-4`) |
+| 출처·날짜·보조 문구 | `text-xs text-muted` (카드 안에서는 `break-keep wrap-break-word` 추가) |
 | 버튼·칩 | `text-sm font-medium` |
 
+- `break-keep`만 쓰면 `GPT-5.5-Turbo-Preview` 같은 긴 영어 단어가 줄바꿈되지 않아 좁은 화면에서 카드 밖으로 넘친다. RSS에서 온 글자(제목, 요약, 출처)에는 `wrap-break-word`를 함께 붙여, 한글은 단어 단위로 바꾸고 너무 긴 단어만 중간에서 끊는다.
 - 날짜는 `2026. 11. 11.` 형식(`Intl.DateTimeFormat("ko-KR", { dateStyle: "medium" })`)으로 표시한다.
 - 숫자를 세로로 맞춰야 하는 곳에는 `tabular-nums`를 붙인다.
 
@@ -161,8 +162,10 @@ body {
 카드 목록 바로 위에 필터 칩을 한 줄로 나열하고, **맨 끝에 '카테고리 추가' 버튼**을 둔다.
 
 - 순서: `전체` → 카테고리들(이름순) → `미분류` → `+ 카테고리 추가`
-- 컨테이너: `flex flex-wrap items-center gap-2`
-- 항목이 많아도 줄바꿈으로 모두 보이게 한다(가로 스크롤 쓰지 않음).
+- 컨테이너: `-mx-4 flex items-center gap-2 overflow-x-auto px-4 py-1 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:py-0`
+- **모바일(`sm` 미만):** 칩이 여러 줄로 쌓여 카드가 화면 아래로 밀리지 않도록 한 줄로 두고 옆으로 밀어 넘긴다. 화면 끝까지 넘길 수 있게 페이지 좌우 여백을 상쇄하고(`-mx-4 px-4`), 포커스 테두리가 잘리지 않게 `py-1`을 둔다. 칩에는 `shrink-0 whitespace-nowrap`을 붙인다.
+- **`sm` 이상:** 줄바꿈으로 모든 칩을 보여 준다.
+- 칩 묶음 안에서만 옆으로 넘기며, 페이지 전체에는 가로 스크롤이 생기지 않아야 한다(4장).
 - 필터를 바꾸면 주소가 바뀌므로 필터 칩은 버튼이 아니라 `next/link`의 `<Link>`로 만든다. 선택된 칩에는 `aria-current="page"`를 붙이고, 칩 묶음은 `<nav aria-label="카테고리 필터">`로 감싼다.
 - 선택된 필터는 URL 검색 파라미터(`/dashboard?category=<id>`, 미분류는 `/dashboard?category=none`, 전체는 파라미터 없음)에 담아 새로고침·뒤로 가기·링크 공유 때도 유지한다. 알 수 없는 값은 전체로 본다.
 - 카테고리 칩과 미분류 칩은 칩 전체를 카테고리 색(2.1)으로 칠한다. 선택되지 않은 칩은 카드 배지와 같은 `soft`, 선택된 칩은 진한 `solid`다. 마우스를 올리면 `hover:ring-1 hover:ring-current/40`으로 같은 색 테두리를 보여 준다.
@@ -218,7 +221,6 @@ body {
 
 - `grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3`
 - 최신순으로 표시한다.
-
 ### 5.4 뉴스 카드
 
 ```
@@ -256,6 +258,7 @@ body {
 
 - 배지는 카테고리 색(2.1)으로 칠한다. 미분류 기사는 배지를 `bg-subtle text-muted`로 표시하고 문구는 `미분류`로 쓴다.
 - 날짜는 발행일을 쓴다. RSS에 발행일이 없으면 수집일을 `수집 2026. 11. 11.`처럼 앞에 '수집'을 붙여 표시한다. 정렬도 같은 기준(발행일, 없으면 수집 시각)이다.
+- '원문보기' 링크는 모바일에서 누르기 쉽도록 글자 크기는 그대로 두고 누르는 영역만 넓힌다: `-ml-1 inline-flex h-9 items-center px-1`. 카드 하단 영역은 `min-h-9`.
 - '원문보기' 링크에는 화면 낭독기용으로 `<span className="sr-only"> (새 탭에서 열림)</span>`을 붙인다. 원문 URL이 `http`·`https`가 아니면 링크를 표시하지 않는다.
 - 카드 전체를 링크로 만들지 않는다. '원문보기'와 '저장하기'를 각각 누르게 한다.
 - 원문 링크는 항상 새 탭(`target="_blank" rel="noopener noreferrer"`)으로 연다.
@@ -299,13 +302,30 @@ body {
 
 배너 영역에는 `role="status"`(오류는 `role="alert"`)를 붙여 스크린 리더가 읽게 한다.
 
-## 8. 빈 상태와 로딩
+## 8. 빈 상태, 로딩, 오류
 
-- **기사가 하나도 없을 때:** 카드 그리드 자리에 가운데 정렬로 안내한다.
-  - 영역: `flex flex-col items-center gap-3 rounded-xl border border-dashed border-line py-16 text-center`
-  - 문구: `아직 수집한 뉴스가 없어요.` / 보조 문구(`text-sm text-muted`): `오른쪽 위 '뉴스 가져오기'를 눌러 시작하세요.`
-- **필터 결과가 없을 때:** `이 카테고리에는 아직 뉴스가 없어요.`
-- **목록 로딩:** 카드와 같은 크기의 스켈레톤 카드 6개를 보여준다. 스켈레톤 줄은 `h-4 rounded bg-subtle animate-pulse`.
+### 8.1 빈 상태
+
+빈 상태 영역: `flex flex-col items-center gap-3 rounded-xl border border-dashed border-line px-4 py-16 text-center`
+
+- **기사가 하나도 없을 때(필터와 상관없이 0건):**
+  - 필터가 의미 없으므로 카테고리 필터 칩은 숨긴다. 단, '+ 카테고리 추가' 버튼은 수집 전에도 카테고리를 만들 수 있도록 남긴다.
+  - 신문 아이콘(`size-10 text-muted`, `aria-hidden`), 문구 `아직 수집한 뉴스가 없어요.`, 보조 문구(`text-sm text-muted`) `새 기사를 가져오면 한국어로 번역·요약한 카드가 여기에 표시돼요.`
+  - 그 아래에 '뉴스 가져오기' 주요 버튼을 둔다. 버튼이 아직 없는 동안에는 문구로 없는 버튼을 가리키지 않는다.
+- **필터 결과가 없을 때:** 문구 `이 카테고리에는 아직 뉴스가 없어요.`와 '전체 뉴스 보기' 링크(`/dashboard`, 보조 버튼 모양 `h-9`)를 둔다.
+- **삭제된 카테고리 주소로 들어왔을 때**(`?category=<없는 ID>`): 빈 화면을 보여 주지 않고 `/dashboard`로 보낸다.
+
+### 8.2 로딩
+
+- **처음 열 때:** `<Suspense>` 대체 화면으로 칩 4개와 카드 6개 모양의 스켈레톤을 보여준다. 스켈레톤 줄은 `h-4 rounded bg-subtle motion-safe:animate-pulse`.
+  - 스켈레톤 영역에 `role="status"`와 화면에는 보이지 않는 문구(`<span className="sr-only">뉴스를 불러오는 중이에요.</span>`)를 둔다. 스켈레톤 도형은 `aria-hidden`.
+- **필터를 바꿀 때:** 같은 페이지에서 주소만 바뀌므로 스켈레톤이 다시 뜨지 않고 이전 카드가 남는다. 대신 누른 칩의 글자를 `useLinkStatus`로 `opacity-60 motion-safe:animate-pulse` 처리해 반응을 보여 준다(`app/dashboard/pending-label.tsx`).
+
+### 8.3 오류
+
+- 목록을 불러오지 못하면 `app/dashboard/error.tsx`가 헤더 아래에 오류 배너(7장, `role="alert"`)를 보여준다. 헤더는 `app/dashboard/layout.tsx`에 있어 오류 때도 남는다.
+- 문구: `뉴스를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.` 옆에 '다시 시도' 보조 버튼을 두고, 누르면 Next.js `retry()`로 다시 불러온다. 다시 불러오는 동안 `다시 불러오는 중…`과 스피너를 보여 준다.
+- 서버 오류 원문은 화면에 표시하지 않는다.
 
 ## 9. 카테고리 관리 화면(`/categories`)
 

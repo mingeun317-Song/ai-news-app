@@ -1,9 +1,10 @@
 import Link from "next/link";
 import type { CategoryFilter } from "@/lib/articles";
 import { categoryColor, type CategoryColor } from "@/lib/category-colors";
+import { PendingLabel } from "./pending-label";
 
 const chipBase =
-  "inline-flex h-8 items-center gap-1.5 rounded-full px-3.5 text-sm font-medium transition-shadow focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
+  "inline-flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-3.5 text-sm font-medium transition-shadow focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
 
 // '전체'는 카테고리가 아니므로 카테고리 색 대신 기본 회색·강조색을 쓴다.
 const ALL_COLOR: CategoryColor = {
@@ -51,7 +52,13 @@ export function CategoryBar({
   ];
 
   return (
-    <nav aria-label="카테고리 필터" className="flex flex-wrap items-center gap-2">
+    // 모바일: 칩이 여러 줄로 쌓여 카드가 밀리지 않도록 한 줄로 두고 옆으로 넘긴다.
+    // 화면 끝까지 넘길 수 있게 좌우 여백(-mx-4 px-4)을 상쇄하고, 포커스 테두리가 잘리지 않게 py-1을 둔다.
+    // sm 이상: 줄바꿈으로 모두 보여 준다.
+    <nav
+      aria-label="카테고리 필터"
+      className="-mx-4 flex items-center gap-2 overflow-x-auto px-4 py-1 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:py-0"
+    >
       {chips.map((chip) => (
         <Link
           key={chip.key}
@@ -63,7 +70,7 @@ export function CategoryBar({
               : `${chipBase} ${chip.color.soft} hover:ring-1 hover:ring-current/40`
           }
         >
-          {chip.label}
+          <PendingLabel>{chip.label}</PendingLabel>
         </Link>
       ))}
       {/* '+ 카테고리 추가' 버튼과 추가 폼(ui.md 5.2)은 카테고리 추가 기능을 만들 때 이 자리에 넣는다. */}

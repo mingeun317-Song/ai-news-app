@@ -22,6 +22,11 @@ export async function getCategories() {
     .orderBy(asc(categories.name));
 }
 
+/** 필터와 상관없는 전체 기사 수 */
+export async function countArticles() {
+  return db.$count(articles);
+}
+
 export async function getArticles(filter: CategoryFilter) {
   const where =
     filter === "all"
