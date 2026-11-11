@@ -15,6 +15,16 @@ export function parseCategoryFilter(
   return "all";
 }
 
+/** 한 페이지에 보여 줄 카드 수(3열 그리드 기준 3줄) */
+export const PAGE_SIZE = 9;
+
+/** URL의 `?page=` 값을 1 이상의 정수로 바꾼다. 알 수 없는 값은 1페이지로 본다. */
+export function parsePage(value: string | string[] | undefined): number {
+  const raw = Array.isArray(value) ? value[0] : value;
+  if (raw && /^\d+$/.test(raw)) return Math.max(1, Number(raw));
+  return 1;
+}
+
 export async function getCategories() {
   return db
     .select({ id: categories.id, name: categories.name })
@@ -22,19 +32,20 @@ export async function getCategories() {
     .orderBy(asc(categories.name));
 }
 
-/** 필터와 상관없는 전체 기사 수 */
-export async function countArticles() {
-  return db.$count(articles);
+function filterCondition(filter: CategoryFilter) {
+  return filter === "all"
+    ? undefined
+    : filter === "none"
+      ? isNull(articles.categoryId)
+      : eq(articles.categoryId, filter);
 }
 
-export async function getArticles(filter: CategoryFilter) {
-  const where =
-    filter === "all"
-      ? undefined
-      : filter === "none"
-        ? isNull(articles.categoryId)
-        : eq(articles.categoryId, filter);
+/** 필터에 맞는 기사 수. 필터를 주지 않으면 전체 기사 수 */
+export async function countArticles(filter: CategoryFilter = "all") {
+  return db.$count(articles, filterCondition(filter));
+}
 
+export async function getArticles(filter: CategoryFilter, page: number) {
   return db
     .select({
       id: articles.id,
@@ -50,12 +61,14 @@ export async function getArticles(filter: CategoryFilter) {
     })
     .from(articles)
     .leftJoin(categories, eq(articles.categoryId, categories.id))
-    .where(where)
-    // 발행일이 없는 기사는 수집 시각을 기준으로 정렬한다.
+    .where(filterCondition(filter))
+    // 발행일이 없는 기사는 수집 시각을 기준으로 정렬한다. id를 함께 두어 페이지가 바뀌어도 순서가 흔들리지 않게 한다.
     .orderBy(
       desc(sql`coalesce(${articles.publishedAt}, ${articles.createdAt})`),
       desc(articles.id),
-    );
+    )
+    .limit(PAGE_SIZE)
+    .offset((page - 1) * PAGE_SIZE);
 }
 
 export type ArticleListItem = Awaited<ReturnType<typeof getArticles>>[number];

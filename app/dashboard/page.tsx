@@ -6,11 +6,14 @@ import {
   countArticles,
   getArticles,
   getCategories,
+  PAGE_SIZE,
   parseCategoryFilter,
+  parsePage,
 } from "@/lib/articles";
 import { ArticleCard } from "./article-card";
 import { CategoryBar } from "./category-bar";
 import { FetchNewsButton } from "./fetch-news";
+import { Pagination, pageHref } from "./pagination";
 
 export default function DashboardPage({
   searchParams,
@@ -27,10 +30,13 @@ async function DashboardContent({
 }: Pick<PageProps<"/dashboard">, "searchParams">) {
   // 수집 직후 새 기사가 바로 보이도록 매 요청마다 DB에서 읽는다.
   await connection();
-  const filter = parseCategoryFilter((await searchParams).category);
-  const [categories, articles] = await Promise.all([
+  const params = await searchParams;
+  const filter = parseCategoryFilter(params.category);
+  const page = parsePage(params.page);
+  const [categories, articles, filteredCount] = await Promise.all([
     getCategories(),
-    getArticles(filter),
+    getArticles(filter, page),
+    countArticles(filter),
   ]);
 
   // 삭제된 카테고리 주소(예: 즐겨찾기)로 들어오면 전체 보기로 보낸다.
@@ -38,9 +44,15 @@ async function DashboardContent({
     redirect("/dashboard");
   }
 
+  // 마지막 페이지보다 큰 번호(기사가 지워졌거나 주소를 직접 고친 경우)는 마지막 페이지로 보낸다.
+  const totalPages = Math.ceil(filteredCount / PAGE_SIZE);
+  if (totalPages > 0 && page > totalPages) {
+    redirect(pageHref(filter, totalPages));
+  }
+
   // 필터 결과가 비었을 때만 전체 기사 수를 따로 센다.
   const hasAnyArticle =
-    articles.length > 0 || (filter !== "all" && (await countArticles()) > 0);
+    filteredCount > 0 || (filter !== "all" && (await countArticles()) > 0);
 
   if (!hasAnyArticle) {
     // 기사가 하나도 없으면 필터가 의미 없으므로 카테고리 바를 숨긴다.
@@ -55,11 +67,14 @@ async function DashboardContent({
       {articles.length === 0 ? (
         <FilteredEmptyState />
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {articles.map((article) => (
-            <ArticleCard key={article.id} article={article} />
-          ))}
-        </div>
+        <>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {articles.map((article) => (
+              <ArticleCard key={article.id} article={article} />
+            ))}
+          </div>
+          <Pagination filter={filter} page={page} totalPages={totalPages} />
+        </>
       )}
     </>
   );
