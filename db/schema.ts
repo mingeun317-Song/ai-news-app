@@ -3,7 +3,11 @@ import { integer, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 export const categories = pgTable("categories", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   name: text().notNull().unique(),
+  // 필터 주소(/dashboard?category=<slug>)에 쓰는 영문 식별자
+  slug: text().notNull().unique(),
   description: text().notNull(),
+  // lib/category-colors.ts의 색 이름. NULL이면 ID로 자동으로 정한다.
+  color: text(),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),

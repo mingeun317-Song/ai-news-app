@@ -15,6 +15,20 @@
       "when": 1793907876314,
       "tag": "0001_add_article_author",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794393554437,
+      "tag": "0002_add_category_slug_color",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1794393941689,
+      "tag": "0003_category_color_hex",
+      "breakpoints": true
     }
   ]
 }

@@ -19,7 +19,7 @@ function isWebUrl(url: string) {
 export function ArticleCard({ article }: { article: ArticleListItem }) {
   const { titleKo, summaryKo, source, url, publishedAt, createdAt, notionSavedAt } =
     article;
-  const color = categoryColor(article.categoryId);
+  const color = categoryColor(article.categoryId, article.categoryColor);
   // RSS에 발행일이 없는 기사는 수집일을 대신 보여 준다.
   const date = publishedAt ?? createdAt;
 
@@ -27,6 +27,7 @@ export function ArticleCard({ article }: { article: ArticleListItem }) {
     <article className="flex flex-col gap-3 rounded-xl border border-line bg-surface p-5 transition-colors hover:border-foreground/20">
       <span
         className={`w-fit rounded-full px-2.5 py-0.5 text-xs font-medium ${color.soft}`}
+        style={color.softStyle}
       >
         {article.categoryName ?? "미분류"}
       </span>

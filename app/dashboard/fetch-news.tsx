@@ -74,9 +74,9 @@ export function FetchNewsBanner() {
     );
   }
 
-  const { added, failedFeeds } = state;
-  // 모든 피드가 실패했으면 '새 기사가 없어요.'는 오해를 주므로 실패 안내만 보여 준다.
-  const allFailed = failedFeeds.length > 0 && added === 0;
+  const { added, failedFeeds, failedArticles } = state;
+  // 실패가 있는데 저장한 기사가 없으면 '새 기사가 없어요.'는 오해를 주므로 실패 안내만 보여 준다.
+  const allFailed = (failedFeeds.length > 0 || failedArticles > 0) && added === 0;
 
   return (
     <div className="flex flex-col gap-2">
@@ -88,6 +88,11 @@ export function FetchNewsBanner() {
       {failedFeeds.length > 0 && (
         <p role="alert" className={errorBanner}>
           {failedFeeds.join(", ")} 피드를 가져오지 못했어요. 다음 수집 때 다시 시도합니다.
+        </p>
+      )}
+      {failedArticles > 0 && (
+        <p role="alert" className={errorBanner}>
+          기사 {failedArticles}건은 번역하지 못했어요. 다음 수집 때 다시 시도합니다.
         </p>
       )}
     </div>

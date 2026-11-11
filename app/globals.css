@@ -13,6 +13,7 @@
   --accent-soft-fg: #4338ca;  /* indigo-700: 카테고리 배지 글자 */
   --danger: #dc2626;          /* red-600: 오류 문구 */
   --success: #16a34a;         /* green-600: 저장됨 */
+  --overlay: rgb(9 9 11 / 0.4); /* zinc-950 40%: 팝업 뒤 배경 */
 
   /* 카테고리 색(lib/category-colors.ts). 글자는 -800, 바탕은 -100 */
   --cat-1: #075985; --cat-1-soft: #e0f2fe; /* sky */
@@ -39,6 +40,7 @@
     --accent-soft-fg: #a5b4fc;/* indigo-300 */
     --danger: #f87171;        /* red-400 */
     --success: #4ade80;       /* green-400 */
+    --overlay: rgb(0 0 0 / 0.6);
 
     /* 글자는 -300, 바탕은 -950 */
     --cat-1: #7dd3fc; --cat-1-soft: #082f49;
@@ -65,6 +67,7 @@
   --color-accent-soft-fg: var(--accent-soft-fg);
   --color-danger: var(--danger);
   --color-success: var(--success);
+  --color-overlay: var(--overlay);
   --color-cat-1: var(--cat-1);
   --color-cat-1-soft: var(--cat-1-soft);
   --color-cat-2: var(--cat-2);

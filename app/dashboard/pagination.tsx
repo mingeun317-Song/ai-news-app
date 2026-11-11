@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { CategoryFilter } from "@/lib/articles";
+import { categoryParam, type CategoryFilter } from "@/lib/articles";
 import { PendingLabel } from "./pending-label";
 
 const itemBase =
@@ -11,7 +11,8 @@ const disabledClass = `${itemBase} border border-line bg-surface text-muted opac
 /** 카테고리 필터는 유지하고 페이지만 바꾼 주소. 1페이지는 `?page=`를 붙이지 않는다. */
 export function pageHref(filter: CategoryFilter, page: number) {
   const params = new URLSearchParams();
-  if (filter !== "all") params.set("category", String(filter));
+  const category = categoryParam(filter);
+  if (category) params.set("category", category);
   if (page > 1) params.set("page", String(page));
   const query = params.toString();
   return query ? `/dashboard?${query}` : "/dashboard";

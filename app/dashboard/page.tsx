@@ -31,18 +31,17 @@ async function DashboardContent({
   // 수집 직후 새 기사가 바로 보이도록 매 요청마다 DB에서 읽는다.
   await connection();
   const params = await searchParams;
-  const filter = parseCategoryFilter(params.category);
+  const categories = await getCategories();
+  const filter = parseCategoryFilter(params.category, categories);
+
+  // 삭제된 카테고리 주소(예: 즐겨찾기)로 들어오면 전체 보기로 보낸다.
+  if (filter === null) redirect("/dashboard");
+
   const page = parsePage(params.page);
-  const [categories, articles, filteredCount] = await Promise.all([
-    getCategories(),
+  const [articles, filteredCount] = await Promise.all([
     getArticles(filter, page),
     countArticles(filter),
   ]);
-
-  // 삭제된 카테고리 주소(예: 즐겨찾기)로 들어오면 전체 보기로 보낸다.
-  if (typeof filter === "number" && !categories.some((c) => c.id === filter)) {
-    redirect("/dashboard");
-  }
 
   // 마지막 페이지보다 큰 번호(기사가 지워졌거나 주소를 직접 고친 경우)는 마지막 페이지로 보낸다.
   const totalPages = Math.ceil(filteredCount / PAGE_SIZE);
@@ -55,9 +54,14 @@ async function DashboardContent({
     filteredCount > 0 || (filter !== "all" && (await countArticles()) > 0);
 
   if (!hasAnyArticle) {
-    // 기사가 하나도 없으면 필터가 의미 없으므로 카테고리 바를 숨긴다.
-    // '+ 카테고리 추가' 버튼을 만들면 수집 전에도 카테고리를 추가할 수 있도록 그 버튼만은 여기서도 보여 준다.
-    return <EmptyState />;
+    // 기사가 하나도 없으면 필터가 의미 없으므로 필터 칩은 숨기고,
+    // 수집 전에도 카테고리를 만들 수 있도록 '+ 카테고리 추가' 버튼만 남긴다.
+    return (
+      <>
+        <CategoryBar categories={categories} selected={filter} showFilters={false} />
+        <EmptyState />
+      </>
+    );
   }
 
   return (

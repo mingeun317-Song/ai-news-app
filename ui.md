@@ -93,9 +93,10 @@ body {
 - 토큰은 `app/globals.css`에 `--cat-N`(진한 색)과 `--cat-N-soft`(연한 색)로 정의한다. 클래스는 두 가지다.
   - `soft`: `bg-cat-N-soft text-cat-N` — 카드 배지, 선택되지 않은 필터 칩
   - `solid`: `bg-cat-N text-surface` — 선택된 필터 칩. 다크 모드에서는 `cat-N`이 밝은 색, `surface`가 어두운 색이라 대비가 그대로 유지된다.
-- 색은 카테고리 이름이 아니라 ID로 정한다: `(id - 1) % 8`번째 색. 이름을 바꿔도 색이 유지되고, 이어서 만든 카테고리끼리는 색이 겹치지 않는다. 9번째 카테고리부터는 색이 다시 돌아온다.
+- 사용자가 카테고리를 추가할 때 고른 색은 `categories.color`에 `#rrggbb`로 저장한다. 이 색은 미리 클래스로 만들 수 없으므로 `categoryColor()`가 돌려주는 인라인 `style`로 칠한다. 라이트·다크 모드 모두에서 읽히도록 `soft`는 `color-mix()`로 `--surface`(바탕)·`--foreground`(글자)와 섞고, `solid`는 고른 색 바탕에 밝기에 따라 흰 글자나 어두운 글자를 쓴다. 디자인 토큰 밖의 색은 이 경우에만 쓴다.
+- 색이 비어 있으면(Claude가 만든 카테고리) 이름이 아니라 ID로 정한다: `(id - 1) % 8`번째 색. 이름을 바꿔도 색이 유지되고, 이어서 만든 카테고리끼리는 색이 겹치지 않는다. 9번째 카테고리부터는 색이 다시 돌아온다.
 - 미분류는 회색을 쓴다: `soft`는 `bg-subtle text-muted`, `solid`는 `bg-muted text-surface`.
-- 색 선택은 `lib/category-colors.ts`의 `categoryColor(categoryId)` 한 곳에서만 한다. Tailwind가 클래스를 찾을 수 있도록 클래스 이름을 문자열 조합(`` `bg-cat-${n}` ``)으로 만들지 않는다.
+- 색 선택은 `lib/category-colors.ts`의 `categoryColor(categoryId, color)` 한 곳에서만 한다. Tailwind가 클래스를 찾을 수 있도록 클래스 이름을 문자열 조합(`` `bg-cat-${n}` ``)으로 만들지 않는다.
 - 색은 보조 수단이다. 배지와 칩에는 항상 카테고리 이름을 함께 쓴다.
 
 ## 3. 타이포그래피
@@ -167,7 +168,7 @@ body {
 - **`sm` 이상:** 줄바꿈으로 모든 칩을 보여 준다.
 - 칩 묶음 안에서만 옆으로 넘기며, 페이지 전체에는 가로 스크롤이 생기지 않아야 한다(4장).
 - 필터를 바꾸면 주소가 바뀌므로 필터 칩은 버튼이 아니라 `next/link`의 `<Link>`로 만든다. 선택된 칩에는 `aria-current="page"`를 붙이고, 칩 묶음은 `<nav aria-label="카테고리 필터">`로 감싼다.
-- 선택된 필터는 URL 검색 파라미터(`/dashboard?category=<id>`, 미분류는 `/dashboard?category=none`, 전체는 파라미터 없음)에 담아 새로고침·뒤로 가기·링크 공유 때도 유지한다. 알 수 없는 값은 전체로 본다.
+- 선택된 필터는 URL 검색 파라미터(`/dashboard?category=<slug>`, 미분류는 `/dashboard?category=none`, 전체는 파라미터 없음)에 담아 새로고침·뒤로 가기·링크 공유 때도 유지한다. 알 수 없는 값은 전체로 본다.
 - 카테고리 칩과 미분류 칩은 칩 전체를 카테고리 색(2.1)으로 칠한다. 선택되지 않은 칩은 카드 배지와 같은 `soft`, 선택된 칩은 진한 `solid`다. 마우스를 올리면 `hover:ring-1 hover:ring-current/40`으로 같은 색 테두리를 보여 준다.
 - '전체' 칩은 카테고리가 아니므로 아래 표의 회색(기본)·강조색(선택)을 쓴다.
 - 칩에 해당 카테고리의 기사 수를 함께 보여줄 수 있다: `모델 12` (숫자는 `text-xs opacity-70 tabular-nums`).
@@ -182,38 +183,42 @@ body {
 
 **카테고리 추가 폼**
 
-카테고리 설명은 DB에서 필수 값(`categories.description`은 `notNull`)이고, Claude가 기사를 분류할 때 기준으로 쓴다(PRD 8.3). 그래서 메인 화면에서도 이름과 설명을 함께 받는다.
+이름, 슬러그, 설명, 색을 받는다. 설명은 DB에서 필수 값(`categories.description`은 `notNull`)이고, Claude가 기사를 분류할 때 기준으로 쓴다(PRD 8.3). 구현은 `app/dashboard/add-category.tsx`.
 
 ```
-│ [전체] [모델] [정책] [미분류] [+ 카테고리 추가]            │
-│ ┌──────────────────────────────────────────────────────┐ │
-│ │ 새 카테고리                                            │ │
-│ │ 이름  [예: 오픈소스 모델                         ]      │ │
-│ │ 설명  [이 카테고리에 넣을 기사를 설명해 주세요     ]      │ │
-│ │       [                                           ]   │ │
-│ │ Claude가 기사를 분류할 때 이 설명을 기준으로 삼아요.      │ │
-│ │ 이후 수집하는 뉴스부터 적용돼요.                          │ │
-│ │                                     [취소] [추가하기]  │ │
-│ └──────────────────────────────────────────────────────┘ │
+            ┌──────────────────────────────┐
+            │ 새 카테고리                    │
+            │ 이름   [예: 오픈소스 모델    ]  │
+            │ 슬러그 [open-source-models  ]  │
+            │ 필터 주소: /dashboard?category=…│
+            │ 설명   [                    ]  │
+            │ Claude가 기사를 분류할 때 …     │
+            │ 색 [■] [#0ea5e9] (미리보기 칩)  │
+            │                [취소] [추가하기]│
+            └──────────────────────────────┘
 ```
 
-1. '+ 카테고리 추가'를 누르면 카테고리 바 바로 아래(카드 그리드 위)에 추가 폼이 펼쳐지고, 이름 입력창에 포커스가 들어간다. 버튼에는 `aria-expanded`와 `aria-controls`를 단다.
-   - 폼이 열린 동안 추가 버튼은 선택된 모양(`border-accent text-accent`)으로 둔다.
-   - 팝오버나 모달 대신 펼침 영역을 쓰는 이유: 위치 계산이 필요 없고, 모바일에서도 폭이 넉넉하다.
-2. 폼 구성(`<form>`, 서버 액션 또는 API로 제출):
-   - 영역: `flex flex-col gap-4 rounded-xl border border-line bg-surface p-5`
-   - 제목: `새 카테고리` (`text-sm font-semibold`)
-   - 라벨: `text-sm font-medium`, 입력창과 `<label htmlFor>`로 연결한다.
+1. '+ 카테고리 추가'를 누르면 화면 가운데에 작은 팝업이 뜨고, 이름 입력창에 포커스가 들어간다. 버튼에는 `aria-haspopup="dialog"`를 단다.
+   - 팝업은 네이티브 모달 `<dialog>`(`showModal()`)로 만든다. 포커스가 팝업 안에 갇히고, `Esc`로 닫히며, 닫히면 포커스가 버튼으로 돌아간다.
+   - 크기: `m-auto w-[calc(100%-2rem)] max-w-sm rounded-xl border border-line bg-surface p-0 shadow-sm`, 뒤 배경은 `backdrop:bg-overlay`(`--overlay` 토큰).
+   - 팝업 바깥 배경을 눌러도 닫는다.
+2. 폼 구성(`<form>`, 서버 액션 `createCategory`로 제출):
+   - 영역: `flex flex-col gap-4 p-5`
+   - 제목: `새 카테고리` (`text-base font-semibold`, `<dialog aria-labelledby>`로 연결)
+   - 라벨: `text-sm font-medium`, 입력창과 `<label htmlFor>`로 연결한다. 입력란은 한 열로 쌓는다.
    - 이름 입력창: `h-9 w-full rounded-lg border border-line bg-surface px-3 text-sm outline-none focus:border-accent`, placeholder `예: 오픈소스 모델`, `required`
+   - 슬러그 입력창: `font-mono`, placeholder `예: open-source-models`. 입력하는 동안 대문자는 소문자로, 공백은 하이픈으로 바꾼다. 아래 도움말로 실제 필터 주소를 보여 준다. 규칙은 `lib/category-slug.ts`(영문 소문자·숫자·하이픈, 50자 이하, `all`·`none` 불가).
    - 설명 입력창: `<textarea rows={3}>`, `w-full resize-y rounded-lg border border-line bg-surface px-3 py-2 text-sm leading-relaxed outline-none focus:border-accent`, placeholder `예: 공개 가중치로 배포된 모델의 출시, 성능 비교, 라이선스 소식`, `required`
    - 도움말(`text-xs text-muted`, 설명 입력창에 `aria-describedby`로 연결): `Claude가 기사를 분류할 때 이 설명을 기준으로 삼아요. 이후 수집하는 뉴스부터 적용돼요.`
+   - 색: 색 선택기(`<input type="color">`, `h-9 w-12`)와 색 코드 입력창(`#rrggbb`, `w-28 font-mono`)을 나란히 두고 서로 맞춘다. 옆에 고른 색으로 칠한 `soft` 칩 미리보기를 둔다. 기본값은 색을 고르지 않은 카테고리들이 아직 쓰지 않는 팔레트 색이다(`suggestColor()`).
    - 버튼(오른쪽 정렬 `flex justify-end gap-2`): '취소'(보조 버튼), '추가하기'(주요 버튼)
-3. 이름과 설명은 앞뒤 공백을 지운 뒤 둘 다 비어 있지 않아야 한다. 둘 중 하나라도 비어 있으면 '추가하기'를 비활성화한다.
-4. `Esc`나 '취소'를 누르면 폼을 닫고 입력값을 지운 뒤 포커스를 '+ 카테고리 추가' 버튼으로 돌려준다. 설명 입력창에서 `Enter`는 줄바꿈이며 제출하지 않는다.
+3. 이름과 설명은 앞뒤 공백을 지운 뒤 비어 있지 않아야 하고, 슬러그와 색 코드는 규칙에 맞아야 한다. 하나라도 어긋나면 '추가하기'를 비활성화한다. 형식이 틀린 슬러그와 색 코드는 제출 전에 입력창 아래에 바로 알린다.
+4. `Esc`, '취소', 바깥 배경을 누르면 팝업을 닫고 입력값을 지운 뒤 포커스를 '+ 카테고리 추가' 버튼으로 돌려준다. 설명 입력창에서 `Enter`는 줄바꿈이며 제출하지 않는다.
 5. 제출하는 동안 입력창과 버튼을 비활성화하고 '추가하기'를 `추가하는 중…`으로 바꾼다.
-6. 성공하면 폼을 닫고 새 칩이 목록에 나타난다.
-7. 실패하면 폼을 연 채로 입력값을 유지하고, 해당 입력창 아래에 `text-xs text-danger`로 이유를 표시한다(입력창에는 `aria-invalid`).
+6. 성공하면 팝업을 닫고 새 칩이 목록에 나타난다.
+7. 실패하면 팝업을 연 채로 입력값을 유지하고, 해당 입력창 아래에 `text-xs text-danger`로 이유를 표시한다(입력창에는 `aria-invalid`).
    - 이름이 이미 있을 때(`name` 고유 제약): `이미 있는 카테고리예요.`
+   - 슬러그가 이미 있을 때(`slug` 고유 제약): `이미 쓰고 있는 슬러그예요.`
    - 그 밖의 오류: 폼 아래에 `카테고리를 추가하지 못했어요. 다시 시도해 주세요.`
 8. 이름·설명 수정과 삭제는 카테고리 관리 화면(`/categories`)에서 한다.
 
@@ -339,7 +344,7 @@ body {
 - 화면 제목 '카테고리 관리'와 메인(`/dashboard`)으로 돌아가는 링크(`← 뉴스로 돌아가기`)를 위에 둔다.
 - 목록은 카드 하나 안에 행으로 나열한다: `divide-y divide-line rounded-xl border border-line bg-surface`
 - 각 행: 이름(`font-medium`), 설명(`text-sm text-muted`), 오른쪽에 '수정'·'삭제' 보조 버튼.
-- 목록 위에 메인 화면과 같은 카테고리 추가 폼(5.2)을 둔다. 두 화면이 같은 컴포넌트를 쓴다.
+- 목록 위에 메인 화면과 같은 카테고리 추가 버튼·팝업(5.2)을 둔다. 두 화면이 같은 컴포넌트를 쓴다.
 - 수정은 행 안에서 이름·설명 입력창으로 바꿔 처리한다. 추가할 때와 같이 이름과 설명 모두 비울 수 없다.
 - 삭제 전에 확인을 받는다: `'모델' 카테고리를 삭제할까요? 이 카테고리의 뉴스는 미분류로 옮겨져요.`
 - 입력창: `h-9 w-full rounded-lg border border-line bg-surface px-3 text-sm outline-none focus:border-accent`

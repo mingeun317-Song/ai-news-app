@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { CategoryFilter } from "@/lib/articles";
-import { categoryColor, type CategoryColor } from "@/lib/category-colors";
+import { categoryColor, suggestColor, type CategoryColor } from "@/lib/category-colors";
+import { AddCategory } from "./add-category";
 import { PendingLabel } from "./pending-label";
 
 const chipBase =
@@ -23,9 +24,12 @@ type Chip = {
 export function CategoryBar({
   categories,
   selected,
+  showFilters = true,
 }: {
-  categories: { id: number; name: string }[];
+  categories: { id: number; name: string; slug: string; color: string | null }[];
   selected: CategoryFilter;
+  /** `false`면 필터 칩을 숨기고 '+ 카테고리 추가' 버튼만 보여 준다(기사가 하나도 없을 때). */
+  showFilters?: boolean;
 }) {
   const chips: Chip[] = [
     {
@@ -38,9 +42,9 @@ export function CategoryBar({
     ...categories.map((category) => ({
       key: String(category.id),
       label: category.name,
-      href: `/dashboard?category=${category.id}`,
-      selected: selected === category.id,
-      color: categoryColor(category.id),
+      href: `/dashboard?category=${category.slug}`,
+      selected: typeof selected === "object" && selected.id === category.id,
+      color: categoryColor(category.id, category.color),
     })),
     {
       key: "none",
@@ -52,28 +56,23 @@ export function CategoryBar({
   ];
 
   return (
-    // 모바일: 칩이 여러 줄로 쌓여 카드가 밀리지 않도록 한 줄로 두고 옆으로 넘긴다.
-    // 화면 끝까지 넘길 수 있게 좌우 여백(-mx-4 px-4)을 상쇄하고, 포커스 테두리가 잘리지 않게 py-1을 둔다.
-    // sm 이상: 줄바꿈으로 모두 보여 준다.
-    <nav
-      aria-label="카테고리 필터"
-      className="-mx-4 flex items-center gap-2 overflow-x-auto px-4 py-1 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:py-0"
-    >
-      {chips.map((chip) => (
-        <Link
-          key={chip.key}
-          href={chip.href}
-          aria-current={chip.selected ? "page" : undefined}
-          className={
-            chip.selected
-              ? `${chipBase} ${chip.color.solid}`
-              : `${chipBase} ${chip.color.soft} hover:ring-1 hover:ring-current/40`
-          }
-        >
-          <PendingLabel>{chip.label}</PendingLabel>
-        </Link>
-      ))}
-      {/* '+ 카테고리 추가' 버튼과 추가 폼(ui.md 5.2)은 카테고리 추가 기능을 만들 때 이 자리에 넣는다. */}
-    </nav>
+    <AddCategory defaultColor={suggestColor(categories)}>
+      {showFilters &&
+        chips.map((chip) => (
+          <Link
+            key={chip.key}
+            href={chip.href}
+            aria-current={chip.selected ? "page" : undefined}
+            className={
+              chip.selected
+                ? `${chipBase} ${chip.color.solid}`
+                : `${chipBase} ${chip.color.soft} hover:ring-1 hover:ring-current/40`
+            }
+            style={chip.selected ? chip.color.solidStyle : chip.color.softStyle}
+          >
+            <PendingLabel>{chip.label}</PendingLabel>
+          </Link>
+        ))}
+    </AddCategory>
   );
 }
