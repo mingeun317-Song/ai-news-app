@@ -75,6 +75,29 @@ body {
 - 글꼴은 따로 추가하지 않고 시스템 글꼴을 쓴다. macOS는 Apple SD Gothic Neo, Windows는 맑은 고딕으로 표시된다.
 - `app/layout.tsx`의 Geist(`next/font/google`)는 한글 글리프가 없으므로 `--font-sans`에 연결하지 않는다. 코드 표시용 Geist Mono만 남긴다.
 
+### 2.1 카테고리 색
+
+카테고리마다 색을 하나씩 정해 카드 배지와 필터 칩 전체를 칠하는 데 쓴다. 칩과 배지가 같은 색이라 필터와 카드가 한눈에 이어진다. 강조색(indigo)과 헷갈리지 않도록 indigo·blue 계열은 빼고 8가지 색을 돌려 쓴다.
+
+| 토큰 | 라이트(글자 / 바탕) | 다크(글자 / 바탕) |
+|---|---|---|
+| `cat-1` sky | `#075985` / `#e0f2fe` | `#7dd3fc` / `#082f49` |
+| `cat-2` emerald | `#065f46` / `#d1fae5` | `#6ee7b7` / `#022c22` |
+| `cat-3` amber | `#92400e` / `#fef3c7` | `#fcd34d` / `#451a03` |
+| `cat-4` rose | `#9f1239` / `#ffe4e6` | `#fda4af` / `#4c0519` |
+| `cat-5` violet | `#5b21b6` / `#ede9fe` | `#c4b5fd` / `#2e1065` |
+| `cat-6` teal | `#115e59` / `#ccfbf1` | `#5eead4` / `#042f2e` |
+| `cat-7` orange | `#9a3412` / `#ffedd5` | `#fdba74` / `#431407` |
+| `cat-8` fuchsia | `#86198f` / `#fae8ff` | `#f0abfc` / `#4a044e` |
+
+- 토큰은 `app/globals.css`에 `--cat-N`(진한 색)과 `--cat-N-soft`(연한 색)로 정의한다. 클래스는 두 가지다.
+  - `soft`: `bg-cat-N-soft text-cat-N` — 카드 배지, 선택되지 않은 필터 칩
+  - `solid`: `bg-cat-N text-surface` — 선택된 필터 칩. 다크 모드에서는 `cat-N`이 밝은 색, `surface`가 어두운 색이라 대비가 그대로 유지된다.
+- 색은 카테고리 이름이 아니라 ID로 정한다: `(id - 1) % 8`번째 색. 이름을 바꿔도 색이 유지되고, 이어서 만든 카테고리끼리는 색이 겹치지 않는다. 9번째 카테고리부터는 색이 다시 돌아온다.
+- 미분류는 회색을 쓴다: `soft`는 `bg-subtle text-muted`, `solid`는 `bg-muted text-surface`.
+- 색 선택은 `lib/category-colors.ts`의 `categoryColor(categoryId)` 한 곳에서만 한다. Tailwind가 클래스를 찾을 수 있도록 클래스 이름을 문자열 조합(`` `bg-cat-${n}` ``)으로 만들지 않는다.
+- 색은 보조 수단이다. 배지와 칩에는 항상 카테고리 이름을 함께 쓴다.
+
 ## 3. 타이포그래피
 
 한국어 본문은 줄 간격을 넉넉히 두고(`leading-relaxed` 이상), 한 줄이 너무 길어지지 않게 카드 폭으로 제한한다. 단어 중간에서 줄이 바뀌지 않도록 본문 요소에 `break-keep`을 쓴다.
@@ -99,7 +122,9 @@ body {
 - 그림자는 쓰지 않거나 `shadow-sm`까지만 쓴다. 영역 구분은 테두리(`border border-line`)로 한다.
 - 모바일(375px)에서도 가로 스크롤이 생기지 않아야 한다.
 
-## 5. 메인 화면(`/`) 구조
+## 5. 메인 화면(`/dashboard`) 구조
+
+`/`로 들어오면 `/dashboard`로 보낸다. 로그인 후 이동하는 주소도 `/dashboard`다.
 
 ```
 ┌──────────────────────────────────────────────────────────┐
@@ -138,13 +163,18 @@ body {
 - 순서: `전체` → 카테고리들(이름순) → `미분류` → `+ 카테고리 추가`
 - 컨테이너: `flex flex-wrap items-center gap-2`
 - 항목이 많아도 줄바꿈으로 모두 보이게 한다(가로 스크롤 쓰지 않음).
-- 필터 칩은 `<button>`이며 선택 상태를 `aria-pressed`로 알린다. 선택된 필터는 URL 검색 파라미터(`?category=<id>`, 미분류는 `?category=none`)에 담아 새로고침해도 유지한다.
+- 필터를 바꾸면 주소가 바뀌므로 필터 칩은 버튼이 아니라 `next/link`의 `<Link>`로 만든다. 선택된 칩에는 `aria-current="page"`를 붙이고, 칩 묶음은 `<nav aria-label="카테고리 필터">`로 감싼다.
+- 선택된 필터는 URL 검색 파라미터(`/dashboard?category=<id>`, 미분류는 `/dashboard?category=none`, 전체는 파라미터 없음)에 담아 새로고침·뒤로 가기·링크 공유 때도 유지한다. 알 수 없는 값은 전체로 본다.
+- 카테고리 칩과 미분류 칩은 칩 전체를 카테고리 색(2.1)으로 칠한다. 선택되지 않은 칩은 카드 배지와 같은 `soft`, 선택된 칩은 진한 `solid`다. 마우스를 올리면 `hover:ring-1 hover:ring-current/40`으로 같은 색 테두리를 보여 준다.
+- '전체' 칩은 카테고리가 아니므로 아래 표의 회색(기본)·강조색(선택)을 쓴다.
 - 칩에 해당 카테고리의 기사 수를 함께 보여줄 수 있다: `모델 12` (숫자는 `text-xs opacity-70 tabular-nums`).
 
 | 요소 | 클래스 |
 |---|---|
-| 칩(기본) | `inline-flex h-8 items-center gap-1.5 rounded-full bg-subtle px-3.5 text-sm font-medium text-foreground/80 transition-colors hover:bg-line` |
-| 칩(선택) | `inline-flex h-8 items-center gap-1.5 rounded-full bg-accent px-3.5 text-sm font-medium text-white` |
+| 칩 공통 | `inline-flex h-8 items-center gap-1.5 rounded-full px-3.5 text-sm font-medium transition-shadow` |
+| 전체 칩(기본) | 공통 + `bg-subtle text-foreground/80 hover:ring-1 hover:ring-current/40` |
+| 전체 칩(선택) | 공통 + `bg-accent text-white` |
+| 카테고리 칩(기본 / 선택) | 공통 + `categoryColor(id).soft` / `categoryColor(id).solid` |
 | 카테고리 추가 버튼 | `inline-flex h-8 items-center gap-1 rounded-full border border-dashed border-line px-3.5 text-sm font-medium text-muted transition-colors hover:border-accent hover:text-accent` |
 
 **카테고리 추가 폼**
@@ -205,7 +235,8 @@ body {
 
 ```tsx
 <article className="flex flex-col gap-3 rounded-xl border border-line bg-surface p-5 transition-colors hover:border-foreground/20">
-  <span className="w-fit rounded-full bg-accent-soft px-2.5 py-0.5 text-xs font-medium text-accent-soft-fg">
+  {/* 색 클래스는 categoryColor(categoryId).soft (2.1) */}
+  <span className="w-fit rounded-full bg-cat-1-soft px-2.5 py-0.5 text-xs font-medium text-cat-1">
     모델
   </span>
   <h2 className="line-clamp-2 text-base font-semibold leading-snug break-keep">…</h2>
@@ -223,7 +254,9 @@ body {
 </article>
 ```
 
-- 미분류 기사는 배지를 `bg-subtle text-muted`로 표시하고 문구는 `미분류`로 쓴다.
+- 배지는 카테고리 색(2.1)으로 칠한다. 미분류 기사는 배지를 `bg-subtle text-muted`로 표시하고 문구는 `미분류`로 쓴다.
+- 날짜는 발행일을 쓴다. RSS에 발행일이 없으면 수집일을 `수집 2026. 11. 11.`처럼 앞에 '수집'을 붙여 표시한다. 정렬도 같은 기준(발행일, 없으면 수집 시각)이다.
+- '원문보기' 링크에는 화면 낭독기용으로 `<span className="sr-only"> (새 탭에서 열림)</span>`을 붙인다. 원문 URL이 `http`·`https`가 아니면 링크를 표시하지 않는다.
 - 카드 전체를 링크로 만들지 않는다. '원문보기'와 '저장하기'를 각각 누르게 한다.
 - 원문 링크는 항상 새 탭(`target="_blank" rel="noopener noreferrer"`)으로 연다.
 - RSS에서 온 제목·요약은 텍스트로만 렌더링한다(`dangerouslySetInnerHTML` 금지).
@@ -276,7 +309,7 @@ body {
 
 ## 9. 카테고리 관리 화면(`/categories`)
 
-- 화면 제목 '카테고리 관리'와 메인으로 돌아가는 링크(`← 뉴스로 돌아가기`)를 위에 둔다.
+- 화면 제목 '카테고리 관리'와 메인(`/dashboard`)으로 돌아가는 링크(`← 뉴스로 돌아가기`)를 위에 둔다.
 - 목록은 카드 하나 안에 행으로 나열한다: `divide-y divide-line rounded-xl border border-line bg-surface`
 - 각 행: 이름(`font-medium`), 설명(`text-sm text-muted`), 오른쪽에 '수정'·'삭제' 보조 버튼.
 - 목록 위에 메인 화면과 같은 카테고리 추가 폼(5.2)을 둔다. 두 화면이 같은 컴포넌트를 쓴다.
@@ -288,7 +321,7 @@ body {
 
 - 본문 글자와 배경의 명도 대비는 4.5:1 이상(토큰 색은 이를 만족하도록 골랐다).
 - 아이콘만 있는 버튼에는 `aria-label`을 단다.
-- 필터 칩은 `aria-pressed`, 로딩 중인 버튼은 `aria-busy`를 쓴다.
+- 선택된 필터 칩(링크)은 `aria-current="page"`, 로딩 중인 영역은 `aria-busy`를 쓴다.
 - 날짜는 `<time dateTime>`으로 감싼다.
 - 모든 동작은 키보드(Tab, Enter, Esc)만으로 할 수 있어야 한다.
 - `prefers-reduced-motion`을 존중한다: 애니메이션 클래스에 `motion-safe:`를 붙인다(예: `motion-safe:animate-spin`).
