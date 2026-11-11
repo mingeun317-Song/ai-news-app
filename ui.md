@@ -243,7 +243,7 @@ body {
 │ …                              │
 │ TechCrunch · 2026. 11. 11.      │  ← 출처 · 발행일
 │ ────────────────────────────── │
-│ 원문보기 ↗            [저장하기] │  ← 동작
+│ 원문보기 ↗           [뉴스 저장] │  ← 동작
 └────────────────────────────────┘
 ```
 
@@ -272,7 +272,7 @@ body {
 - 날짜는 발행일을 쓴다. RSS에 발행일이 없으면 수집일을 `수집 2026. 11. 11.`처럼 앞에 '수집'을 붙여 표시한다. 정렬도 같은 기준(발행일, 없으면 수집 시각)이다.
 - '원문보기' 링크는 모바일에서 누르기 쉽도록 글자 크기는 그대로 두고 누르는 영역만 넓힌다: `-ml-1 inline-flex h-9 items-center px-1`. 카드 하단 영역은 `min-h-9`.
 - '원문보기' 링크에는 화면 낭독기용으로 `<span className="sr-only"> (새 탭에서 열림)</span>`을 붙인다. 원문 URL이 `http`·`https`가 아니면 링크를 표시하지 않는다.
-- 카드 전체를 링크로 만들지 않는다. '원문보기'와 '저장하기'를 각각 누르게 한다.
+- 카드 전체를 링크로 만들지 않는다. '원문보기'와 '뉴스 저장'을 각각 누르게 한다.
 - 원문 링크는 항상 새 탭(`target="_blank" rel="noopener noreferrer"`)으로 연다.
 - RSS에서 온 제목·요약은 텍스트로만 렌더링한다(`dangerouslySetInnerHTML` 금지).
 
@@ -281,16 +281,16 @@ body {
 | 종류 | 용도 | 클래스 |
 |---|---|---|
 | 주요(Primary) | 뉴스 가져오기 | `inline-flex h-9 items-center gap-2 rounded-lg bg-accent px-4 text-sm font-medium text-white transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-60` |
-| 보조(Secondary) | 저장하기, 취소 | `inline-flex h-8 items-center gap-1.5 rounded-lg border border-line bg-surface px-3 text-sm font-medium transition-colors hover:bg-subtle disabled:cursor-not-allowed disabled:opacity-60` |
+| 보조(Secondary) | 뉴스 저장, 취소 | `inline-flex h-8 items-center gap-1.5 rounded-lg border border-line bg-surface px-3 text-sm font-medium transition-colors hover:bg-subtle disabled:cursor-not-allowed disabled:opacity-60` |
 | 위험(Danger) | 카테고리 삭제 | 보조 버튼에 `text-danger hover:border-danger` 추가 |
 
 모든 버튼과 링크에 키보드 포커스 표시를 둔다: `focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent`
 
-### 6.1 '저장하기' 버튼 상태
+### 6.1 '뉴스 저장' 버튼 상태
 
 | 상태 | 문구 | 표시 |
 |---|---|---|
-| 기본 | `저장하기` | 보조 버튼 |
+| 기본 | `뉴스 저장` | 보조 버튼 |
 | 저장 중 | `저장 중…` | `disabled`, 스피너 |
 | 저장됨 | `저장됨 ✓` | `disabled`, `text-success`, 테두리 없음(`border-transparent`) — 다시 누를 수 없음 |
 | 실패 | `다시 시도` | 보조 버튼, 버튼 왼쪽에 `text-xs text-danger`로 `저장에 실패했어요.` |
@@ -360,7 +360,7 @@ body {
 
 ## 11. 문구 규칙
 
-- 버튼은 동사로 끝낸다: '뉴스 가져오기', '저장하기', '원문보기', '카테고리 추가'.
+- 버튼은 누르면 일어날 동작을 이름으로 쓴다: '뉴스 가져오기', '뉴스 저장', '원문보기', '카테고리 추가'.
 - 안내·결과 문구는 해요체로 짧게 쓴다: `새 기사가 없어요.`
 - 오류는 무엇이 실패했는지와 다음에 할 일을 함께 쓴다: `저장에 실패했어요. 다시 시도해 주세요.`
 - 메타데이터 `title`은 'AI 뉴스 수집기'로 바꾼다(`app/layout.tsx`의 'Create Next App' 교체).

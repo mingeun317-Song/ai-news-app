@@ -1,5 +1,6 @@
 import type { ArticleListItem } from "@/lib/articles";
 import { categoryColor } from "@/lib/category-colors";
+import { SaveButton } from "./save-button";
 
 const dateFormat = new Intl.DateTimeFormat("ko-KR", {
   dateStyle: "medium",
@@ -63,10 +64,7 @@ export function ArticleCard({ article }: { article: ArticleListItem }) {
         ) : (
           <span />
         )}
-        {/* '저장하기' 버튼은 노션 저장 API를 만들 때 이 자리에 넣는다. */}
-        {notionSavedAt && (
-          <span className="text-sm font-medium text-success">저장됨 ✓</span>
-        )}
+        <SaveButton articleId={article.id} saved={notionSavedAt !== null} />
       </div>
     </article>
   );
