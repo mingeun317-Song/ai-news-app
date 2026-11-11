@@ -176,7 +176,7 @@ app/page.tsx                           /dashboard로 이동
 app/dashboard/page.tsx                 메인 화면
 app/categories/page.tsx                카테고리 관리
 app/sign-in/[[...sign-in]]/            Clerk 로그인
-app/api/news/fetch/route.ts            뉴스 가져오기
+app/dashboard/actions.ts               뉴스 가져오기(Server Action, 끝나면 refresh())
 app/api/articles/[id]/notion/route.ts  노션 저장
 proxy.ts                               Clerk 인증 보호
 db/schema.ts                           Drizzle 스키마

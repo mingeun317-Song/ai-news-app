@@ -10,6 +10,7 @@ import {
 } from "@/lib/articles";
 import { ArticleCard } from "./article-card";
 import { CategoryBar } from "./category-bar";
+import { FetchNewsButton } from "./fetch-news";
 
 export default function DashboardPage({
   searchParams,
@@ -91,7 +92,7 @@ function EmptyState() {
       <p className="text-sm break-keep text-muted">
         새 기사를 가져오면 한국어로 번역·요약한 카드가 여기에 표시돼요.
       </p>
-      {/* '뉴스 가져오기' 버튼을 만들면 이 자리에도 넣는다(ui.md 8장). */}
+      <FetchNewsButton />
     </div>
   );
 }
