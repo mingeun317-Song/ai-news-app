@@ -100,7 +100,8 @@
 | 경로 | 화면 | 내용 |
 |---|---|---|
 | `/sign-in` | 로그인 | Clerk 로그인 |
-| `/` | 메인 | 뉴스 가져오기, 카테고리 필터, 뉴스 카드 목록 |
+| `/` | - | `/dashboard`로 이동 |
+| `/dashboard` | 메인 | 뉴스 가져오기, 카테고리 필터, 뉴스 카드 목록 |
 | `/categories` | 카테고리 관리 | 추가, 이름·설명 수정, 삭제 |
 
 ## 7. 기술 스택
@@ -171,7 +172,8 @@
 ### 8.5 폴더 구조
 
 ```
-app/page.tsx                           메인 화면
+app/page.tsx                           /dashboard로 이동
+app/dashboard/page.tsx                 메인 화면
 app/categories/page.tsx                카테고리 관리
 app/sign-in/[[...sign-in]]/            Clerk 로그인
 app/api/news/fetch/route.ts            뉴스 가져오기
@@ -205,7 +207,7 @@ lib/rss.ts, lib/claude.ts, lib/notion.ts  외부 연동
 
 ## 11. 인수 기준
 
-- [ ] 로그아웃 상태에서 `/`와 API에 접근할 수 없다.
+- [ ] 로그아웃 상태에서 `/dashboard`와 API에 접근할 수 없다.
 - [ ] '뉴스 가져오기'를 누르면 두 사이트의 기사가 한국어 카드로 표시된다.
 - [ ] 다시 눌러도 중복 카드가 생기지 않고 같은 기사를 다시 번역하지 않는다.
 - [ ] 피드 하나가 실패해도 다른 피드의 기사는 수집된다.

@@ -4,7 +4,7 @@ import { SignInButton, useAuth, useClerk } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
-const AFTER_SIGN_IN_URL = "/";
+const AFTER_SIGN_IN_URL = "/dashboard";
 
 export function SignInModal() {
   const { isLoaded, isSignedIn } = useAuth();

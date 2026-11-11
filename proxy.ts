@@ -10,10 +10,10 @@ export default clerkMiddleware(
       return;
     }
 
-    // 이미 로그인한 상태에서는 Clerk 모달이 열리지 않으므로 메인으로 보낸다.
+    // 이미 로그인한 상태에서는 Clerk 모달이 열리지 않으므로 메인(/dashboard)으로 보낸다.
     const { userId } = await auth();
     if (userId) {
-      return NextResponse.redirect(new URL("/", request.url));
+      return NextResponse.redirect(new URL("/dashboard", request.url));
     }
   },
   { signInUrl: "/sign-in" },
