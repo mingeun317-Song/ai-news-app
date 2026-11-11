@@ -43,6 +43,10 @@ RSS 피드 → URL 정규화·중복 제외 → Claude 번역·요약·분류 �
 - **카테고리 삭제:** `articles.category_id`는 `ON DELETE SET NULL`이며, `NULL`이 곧 '미분류'다. 미분류용 행을 따로 만들지 않는다.
 - **인증:** 로그인하지 않으면 모든 화면과 API에 접근할 수 없다. Clerk로 처리한다.
 
+## UI
+
+화면이나 컴포넌트를 만들거나 고칠 때는 먼저 `ui.md`를 읽고 따른다. 색은 `app/globals.css`의 디자인 토큰(`bg-surface`, `text-muted` 등)으로만 쓰고, `dark:` 클래스나 임의 색상값을 직접 넣지 않는다. 화면 구성과 기능은 `PRD.md`, 스타일과 상호작용은 `ui.md`가 기준이다.
+
 ## 환경 변수
 
 `.env.local`에 넣는다: `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`, `DATABASE_URL`, `ANTHROPIC_API_KEY`, `NOTION_TOKEN`, `NOTION_DATABASE_ID`
