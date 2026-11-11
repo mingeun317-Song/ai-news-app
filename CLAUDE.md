@@ -4,9 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 @AGENTS.md
 
-## 현재 상태
+## 작업 기준
 
-`create-next-app` 템플릿만 있고 앱 코드는 아직 없다. 요구사항, 데이터 모델, 구현 순서의 기준은 `PRD.md`다. 아래 설계는 PRD에 정해진 계획이며, 아직 구현되지 않은 부분은 해당 파일을 확인한 뒤 작업한다.
+구현된 부분은 코드와 `git log`로 확인하고, 아직 없는 부분은 `PRD.md`(요구사항, 데이터 모델, 구현 순서)를 기준으로 작업한다.
 
 ## 명령어
 
